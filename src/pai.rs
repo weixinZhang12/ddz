@@ -2,10 +2,11 @@ pub mod normal_version {
     use std::{cmp::Ordering, collections::HashMap};
 
     use rand::Rng;
+    pub type PaiVec =Vec<Option<char>>;
 
     pub struct Pai {
         ///正常牌
-        pub normal_pai: Vec<Vec<Option<char>>>,
+        pub normal_pai: Vec<PaiVec>,
         ///小王和和大王
         pub cu_map: HashMap<char, usize>,
         pub uc_map: HashMap<usize, char>,
@@ -113,9 +114,9 @@ pub mod normal_version {
             }
         }
         ///分配牌
-        pub fn asign_pai(&mut self, _length: usize) -> Vec<Option<char>> {
+        pub fn asign_pai(&mut self, _length: usize) -> PaiVec {
             let mut rng = rand::thread_rng();
-            let mut temp: Vec<Option<char>> = vec![];
+            let mut temp: PaiVec = vec![];
             // 抽取牌直到满17张
             while temp.len() < 17 {
                 let row: usize = rng.gen_range(0..4);
@@ -151,8 +152,8 @@ pub mod normal_version {
             // pai_d.sort_by(|a, b| self.compare_pai(a.unwrap(), b.unwrap()));
         }
         ///返回底牌
-        pub fn remain_pai(&mut self) -> Vec<Option<char>> {
-            let mut temp: Vec<Option<char>> = vec![];
+        pub fn remain_pai(&mut self) -> PaiVec {
+            let mut temp: PaiVec = vec![];
             for i in &mut self.normal_pai {
                 for j in i {
                     if j.is_some() {
@@ -177,9 +178,9 @@ pub mod normal_version {
             s
         }
         ///旧方法，现在即将废弃
-        pub fn _duizi_f(&self, s: String) -> Vec<Option<char>> {
+        pub fn _duizi_f(&self, s: String) -> PaiVec {
             let mut pattern = String::new();
-            let mut array: Vec<Option<char>> = vec![];
+            let mut array: PaiVec = vec![];
             for i in 3..=15 {
                 let a = self.uc_map.get(&i).unwrap();
                 pattern.push(*a);

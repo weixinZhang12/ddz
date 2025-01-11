@@ -24,6 +24,16 @@ fn main() {
     println!("玩家1排序后：{:?}", player1.pai_to_string());
     println!("玩家2排序后：{:?}", player2.pai_to_string());
     println!("玩家3排序后：{:?}", player3.pai_to_string());
-    let dz = player1.stat_pai;
+    let dz = &player1.stat_pai;
     println!("玩家1手牌统计{:?}", dz);
+    player1.del("459".to_string());
+    println!("玩家1出牌后：{:?}", player1.pai_to_string());
+    println!("玩家1手牌数量：{:?}", player1.len);
+    println!("玩家一可以出的单张{:?}",player1.have_one());
+    println!("玩家一可以出的对子{:?}",player1.have_double());
+    println!("玩家一可以出的三张{:?}",player1.have_three());
+    println!("玩家一可以出的炸弹{:?}",player1.have_boom());
+    println!("玩家一可以出的三带{:?}",player1.have_three_and_one());
+    // println!("玩家一可以出的对子{:?}",player1.have_double());
+
 }
