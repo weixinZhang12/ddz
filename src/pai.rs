@@ -2,11 +2,11 @@ pub mod normal_version {
     use std::{cmp::Ordering, collections::HashMap};
 
     use rand::Rng;
-    pub type PaiVec =Vec<Option<char>>;
+    pub type PaiVec = Vec<Option<char>>;
 
     pub struct Pai {
         ///正常牌
-        pub normal_pai: Vec<PaiVec>,
+        pub normal_pai:PaiVec,
         ///小王和和大王
         pub cu_map: HashMap<char, usize>,
         pub uc_map: HashMap<usize, char>,
@@ -47,67 +47,60 @@ pub mod normal_version {
             uc_map.insert(17, 'w');
             Pai {
                 normal_pai: vec![
-                    vec![
-                        Some('A'),
-                        Some('2'),
-                        Some('3'),
-                        Some('4'),
-                        Some('5'),
-                        Some('6'),
-                        Some('7'),
-                        Some('8'),
-                        Some('9'),
-                        Some('T'),
-                        Some('J'),
-                        Some('Q'),
-                        Some('K'),
-                    ],
-                    vec![
-                        Some('A'),
-                        Some('2'),
-                        Some('3'),
-                        Some('4'),
-                        Some('5'),
-                        Some('6'),
-                        Some('7'),
-                        Some('8'),
-                        Some('9'),
-                        Some('T'),
-                        Some('J'),
-                        Some('Q'),
-                        Some('K'),
-                    ],
-                    vec![
-                        Some('A'),
-                        Some('2'),
-                        Some('3'),
-                        Some('4'),
-                        Some('5'),
-                        Some('6'),
-                        Some('7'),
-                        Some('8'),
-                        Some('9'),
-                        Some('T'),
-                        Some('J'),
-                        Some('Q'),
-                        Some('K'),
-                    ],
-                    vec![
-                        Some('A'),
-                        Some('2'),
-                        Some('3'),
-                        Some('4'),
-                        Some('5'),
-                        Some('6'),
-                        Some('7'),
-                        Some('8'),
-                        Some('9'),
-                        Some('T'),
-                        Some('J'),
-                        Some('Q'),
-                        Some('K'),
-                    ],
-                    vec![Some('W'), Some('w')]
+                    Some('A'),
+                    Some('2'),
+                    Some('3'),
+                    Some('4'),
+                    Some('5'),
+                    Some('6'),
+                    Some('7'),
+                    Some('8'),
+                    Some('9'),
+                    Some('T'),
+                    Some('J'),
+                    Some('Q'),
+                    Some('K'),
+                    Some('A'),
+                    Some('2'),
+                    Some('3'),
+                    Some('4'),
+                    Some('5'),
+                    Some('6'),
+                    Some('7'),
+                    Some('8'),
+                    Some('9'),
+                    Some('T'),
+                    Some('J'),
+                    Some('Q'),
+                    Some('K'),
+                    Some('A'),
+                    Some('2'),
+                    Some('3'),
+                    Some('4'),
+                    Some('5'),
+                    Some('6'),
+                    Some('7'),
+                    Some('8'),
+                    Some('9'),
+                    Some('T'),
+                    Some('J'),
+                    Some('Q'),
+                    Some('K'),
+                    Some('A'),
+                    Some('2'),
+                    Some('3'),
+                    Some('4'),
+                    Some('5'),
+                    Some('6'),
+                    Some('7'),
+                    Some('8'),
+                    Some('9'),
+                    Some('T'),
+                    Some('J'),
+                    Some('Q'),
+                    Some('K'),
+                    Some('W'),
+                    Some('w'),
                 ],
                 cu_map,
                 uc_map,
@@ -119,20 +112,13 @@ pub mod normal_version {
             let mut temp: PaiVec = vec![];
             // 抽取牌直到满17张
             while temp.len() < 17 {
-                let row: usize = rng.gen_range(0..4);
+                let row: usize = rng.gen_range(0..54);
                 let col: usize = rng.gen_range(0..13);
-                if self.normal_pai[row][col].is_some() {
-                    temp.push(self.normal_pai[row][col].take());
+                if self.normal_pai[row].is_some() {
+                    temp.push(self.normal_pai[row].take());
                     continue;
                 }
-                // 抽到王的概率为3%
-                let take_unnor = rng.gen_bool(0.03);
-                if take_unnor == true && temp.len() < 17 {
-                    let i = rng.gen_range(0..2);
-                    if self.normal_pai[4][i].is_some() {
-                        temp.push(self.normal_pai[4][i].take());
-                    }
-                }
+              
             }
             temp
         }
@@ -155,26 +141,22 @@ pub mod normal_version {
         pub fn remain_pai(&mut self) -> PaiVec {
             let mut temp: PaiVec = vec![];
             for i in &mut self.normal_pai {
-                for j in i {
-                    if j.is_some() {
-                        temp.push(j.take());
+                    if i.is_some() {
+                        temp.push(i.take());
                     }
-                }
             }
-          
+
             temp
         }
         ///牌堆转换为字符串
         pub fn pai_to_string(&self) -> String {
             let mut s = String::new();
             for i in &self.normal_pai {
-                for j in i {
-                    if j.is_some() {
-                        s.push(j.unwrap());
+                    if i.is_some() {
+                        s.push(i.unwrap());
                     }
-                }
             }
-           
+
             s
         }
         ///旧方法，现在即将废弃
@@ -196,17 +178,15 @@ pub mod normal_version {
         pub fn stat_player_pai(&self) -> HashMap<char, usize> {
             let mut map: HashMap<char, usize> = HashMap::new();
             for i in &self.normal_pai {
-                for j in i {
-                    if let Some(i1) = j {
+                    if let Some(i1) = i {
                         if let Some(count) = map.get_mut(&i1) {
                             *count += 1;
                         } else {
                             map.insert(*i1, 1);
                         }
                     }
-                }
             }
-           
+
             map
         }
     }
