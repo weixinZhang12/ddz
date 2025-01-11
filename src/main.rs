@@ -33,7 +33,8 @@ fn main() {
     println!("玩家一可以出的对子{:?}",player1.have_double());
     println!("玩家一可以出的三张{:?}",player1.have_three());
     println!("玩家一可以出的炸弹{:?}",player1.have_boom());
-    println!("玩家一可以出的三带{:?}",player1.have_three_and_one());
+    println!("玩家一可以出的三带1{:?}",player1.have_three_and_one());
+    println!("玩家一可以出的三带2{:?}",player1.have_three_and_double());
     // println!("玩家一可以出的对子{:?}",player1.have_double());
 
 }

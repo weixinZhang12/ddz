@@ -163,13 +163,24 @@ pub mod normal {
             self.auto_mod_len();
             Ok(())
         }
-        pub fn have_one(&self) -> Vec<String> {
+        pub fn have_one_repeated(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
             println!("{:?}", self.stat_pai);
             for i in &self.stat_pai {
                 let mut temp2: String = String::new();
                 for j in 0..*i.1 {
                     temp.push(i.0.to_string());
+                }
+            }
+            temp
+        }
+        pub fn have_one(&self) -> Vec<String> {
+            let mut temp: Vec<String> = vec![];
+            for i in &self.stat_pai {
+                if *i.1 >= 1 {
+                    let mut temp2: String = String::new();
+                    temp2.push(*i.0);
+                    temp.push(temp2);
                 }
             }
             temp
@@ -208,6 +219,21 @@ pub mod normal {
             for i in three {
                 for j in &one {
                     if &i[0..1]!=j {
+                        temp.push(i.clone()+j);
+                    }
+                }
+            }
+            temp
+
+        }
+        pub fn have_three_and_double(&self) -> Vec<String> {
+            let mut temp: Vec<String> = vec![];
+            
+            let mut three=self.have_three();
+            let mut one=self.have_double();
+            for i in three {
+                for j in &one {
+                    if &i[0..1]!=&j[0..1] {
                         temp.push(i.clone()+j);
                     }
                 }
