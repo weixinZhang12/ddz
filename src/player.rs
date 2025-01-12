@@ -1,13 +1,17 @@
 pub mod normal {
+    use crate::pai::{
+        normal_version::{Pai, PaiVec},
+        pai_p::remove_duplicates,
+    };
     use std::{cmp::Ordering, collections::HashMap, error::Error};
-
-    use crate::pai::normal_version::{Pai, PaiVec};
+    #[derive(Clone)]
     pub struct Player {
         pub pai: PaiVec,
         pub stat_pai: HashMap<char, usize>,
         pub cu_map: HashMap<char, usize>,
         pub uc_map: HashMap<usize, char>,
         pub len: usize,
+        pub is_dz:bool
     }
     impl Player {
         pub fn new() -> Self {
@@ -49,6 +53,7 @@ pub mod normal {
                 cu_map,
                 uc_map,
                 len: 0,
+                is_dz:false
             }
         }
         ///修改玩家手牌
@@ -57,15 +62,28 @@ pub mod normal {
             self.stat_player_pai();
             self.auto_mod_len();
         }
+        ///通过字符串修改手牌
+        pub fn put_by_s(&mut self, v: &String) {
+            let mut pai: PaiVec = vec![];
+            for i in v.chars() {
+                pai.push(Some(i));
+            }
+            self.pai = pai;
+            self.stat_player_pai();
+            self.auto_mod_len();
+        }
+        ///添加手牌
         pub fn add(&mut self, v: &PaiVec) {
             self.pai.extend(v);
             self.stat_player_pai();
             self.auto_mod_len();
         }
+        // 自动修改手牌数量
         pub fn auto_mod_len(&mut self) {
             let len = self.get_length();
             self.len = len
         }
+        // 获取手牌数
         pub fn get_length(&self) -> usize {
             self.pai_to_string().len()
         }
@@ -115,8 +133,37 @@ pub mod normal {
             }
             s
         }
+
+        pub fn find_min(&self)->Option<String>{
+            let one=self.have_one();
+            if let Some(v) = one.iter().min() {
+                return Some(v.clone());
+            }
+            None
+
+        }
+
+        pub fn chooose_by_second(&self, s: &Option<String>) -> Option<String> {
+            if let Some(v) = s {
+               let a=  self.cu_map.get(&v.chars().next().unwrap()).unwrap();
+               for i in self.have_one() {
+               let b=  self.cu_map.get(&i.chars().next().unwrap()).unwrap();
+                   if b>a {
+                       return Some(i);
+                   }
+               }
+            }
+            else {
+                let min=self.find_min();
+                if min.is_some() {
+                    return min;
+                }
+            }
+            None
+        }
+
         ///打出牌，无法打出的时候会返回一个错误
-        pub fn del(&mut self, s: String) -> Result<(), Box<dyn Error>> {
+        pub fn del(&mut self, s: String) -> Result<String, Box<dyn Error>> {
             let c_arr: Vec<char> = s.chars().collect();
             // 创建副本，如果在副本尝试出牌无法打出，直接放弃，否则才会修改真正的手牌
             let mut t = self.stat_pai.clone();
@@ -161,8 +208,9 @@ pub mod normal {
                 }
             }
             self.auto_mod_len();
-            Ok(())
+            Ok(s)
         }
+        ///获取所有单张的牌
         pub fn have_one_repeated(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
             println!("{:?}", self.stat_pai);
@@ -174,6 +222,8 @@ pub mod normal {
             }
             temp
         }
+
+        ///获取所有单张的牌，不重复
         pub fn have_one(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
             for i in &self.stat_pai {
@@ -185,6 +235,7 @@ pub mod normal {
             }
             temp
         }
+        ///获取所有对子牌
         pub fn have_double(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
             for i in &self.stat_pai {
@@ -197,6 +248,7 @@ pub mod normal {
             }
             temp
         }
+        ///获取所有三张的牌
         pub fn have_three(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
             for i in &self.stat_pai {
@@ -210,36 +262,180 @@ pub mod normal {
             }
             temp
         }
-
+        ///获取所有三带一的牌
         pub fn have_three_and_one(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
-            
-            let mut three=self.have_three();
-            let mut one=self.have_one();
+
+            let mut three = self.have_three();
+            let mut one = self.have_one();
             for i in three {
                 for j in &one {
-                    if &i[0..1]!=j {
-                        temp.push(i.clone()+j);
+                    if &i[0..1] != j {
+                        temp.push(i.clone() + j);
                     }
                 }
             }
             temp
-
         }
         pub fn have_three_and_double(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
-            
-            let mut three=self.have_three();
-            let mut one=self.have_double();
+
+            let mut three = self.have_three();
+            let mut one = self.have_double();
             for i in three {
                 for j in &one {
-                    if &i[0..1]!=&j[0..1] {
-                        temp.push(i.clone()+j);
+                    if &i[0..1] != &j[0..1] {
+                        temp.push(i.clone() + j);
                     }
                 }
             }
             temp
+        }
+        pub fn have_three_and_three(&self) -> Vec<String> {
+            let mut temp: Vec<String> = vec![];
 
+            let mut three = self.have_three();
+            let mut one = self.have_three();
+            for i in three {
+                for j in &one {
+                    if i == "2" || j == "2" {
+                        continue;
+                    }
+                    let i1 = self.cu_map.get(&i.chars().next().unwrap()).unwrap();
+                    let j1 = self.cu_map.get(&j.chars().next().unwrap()).unwrap();
+                    if (*i1 as isize) - (*j1 as isize) == 1 || (*i1 as isize) - (*j1 as isize) == -1
+                    {
+                        temp.push(i.clone() + j);
+                    }
+                }
+            }
+            temp
+        }
+        pub fn have_ttt(&self) -> Vec<String> {
+            let mut temp: Vec<String> = vec![];
+
+            let mut three = self.have_three();
+            let mut three2 = self.have_three();
+            let mut three3 = self.have_three();
+            for i in &three {
+                for j in &three2 {
+                    for k in &three3 {
+                        if i == j || j == k || i == k {
+                            continue;
+                        }
+                        if i == "2" || j == "2" || k == "2" {
+                            continue;
+                        }
+                        let i1 = *self.cu_map.get(&i.chars().next().unwrap()).unwrap() as isize;
+                        let j1 = *self.cu_map.get(&j.chars().next().unwrap()).unwrap() as isize;
+                        let k1 = *self.cu_map.get(&k.chars().next().unwrap()).unwrap() as isize;
+                        if (i1 - j1 == 1 || i1 - j1 == -1) && (j1 - k1 == 1 || j1 - k1 == -1)
+                        // && (i1 - k1 == 1 || i1 - k1 == -1)
+                        {
+                            temp.push(i.clone() + j + k);
+                        }
+                    }
+                }
+            }
+            temp
+        }
+        pub fn have_tttt(&self) -> Vec<String> {
+            let mut temp: Vec<String> = vec![];
+
+            let mut three = self.have_three();
+            let mut three2 = self.have_three();
+            let mut three3 = self.have_three();
+            let mut three4 = self.have_three();
+            for i in &three {
+                for j in &three2 {
+                    for k in &three3 {
+                        for l in &three4 {
+                            if i == j || i == k || i == l || j == k || j == l || k == l {
+                                continue;
+                            }
+                            if i == "2" || j == "2" || k == "2" || l == "2" {
+                                continue;
+                            }
+                            let i1 = *self.cu_map.get(&i.chars().next().unwrap()).unwrap() as isize;
+                            let j1 = *self.cu_map.get(&j.chars().next().unwrap()).unwrap() as isize;
+                            let k1 = *self.cu_map.get(&k.chars().next().unwrap()).unwrap() as isize;
+                            let l1 = *self.cu_map.get(&l.chars().next().unwrap()).unwrap() as isize;
+                            if (i1 - j1 == 1 || i1 - j1 == -1)
+                                && (j1 - k1 == 1 || j1 - k1 == -1)
+                                && (l1 - k1 == 1 || l1 - k1 == -1)
+                            {
+                                temp.push(i.clone() + j + k + l);
+                            }
+                        }
+                    }
+                }
+            }
+            temp
+        }
+
+        pub fn have_ttttt(&self) -> Vec<String> {
+            let mut temp: Vec<String> = vec![];
+
+            let mut three = self.have_three();
+            let mut three2 = self.have_three();
+            let mut three3 = self.have_three();
+            let mut three4 = self.have_three();
+            let mut three5 = self.have_three();
+            for i in &three {
+                for j in &three2 {
+                    for k in &three3 {
+                        for l in &three4 {
+                            for u in &three5 {
+                                if i == j
+                                    || i == k
+                                    || i == l
+                                    || i == u
+                                    || j == k
+                                    || j == l
+                                    || j == u
+                                    || k == l
+                                    || k == u
+                                {
+                                    continue;
+                                }
+                                if i == "2" || j == "2" || k == "2" || l == "2" || u == "2" {
+                                    continue;
+                                }
+                                let i1 =
+                                    *self.cu_map.get(&i.chars().next().unwrap()).unwrap() as isize;
+                                let j1 =
+                                    *self.cu_map.get(&j.chars().next().unwrap()).unwrap() as isize;
+                                let k1 =
+                                    *self.cu_map.get(&k.chars().next().unwrap()).unwrap() as isize;
+                                let l1 =
+                                    *self.cu_map.get(&l.chars().next().unwrap()).unwrap() as isize;
+                                let u1 =
+                                    *self.cu_map.get(&u.chars().next().unwrap()).unwrap() as isize;
+                                if (i1 - j1 == 1 || i1 - j1 == -1)
+                                    && (j1 - k1 == 1 || j1 - k1 == -1)
+                                    && (l1 - k1 == 1 || l1 - k1 == -1)
+                                    && (u1 - l1 == 1 || u1 - l1 == -1)
+                                {
+                                    temp.push(i.clone() + j + k + l + u);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            temp
+        }
+
+        pub fn have_tttooo(&self) -> Vec<String> {
+            let ttt: Vec<String> = self.have_ttt();
+            let one: Vec<String> = self.have_one();
+            let mut three_head: Vec<&str> = vec![];
+            let mut temp: Vec<String> = vec![];
+            for i in &ttt {
+                let t = remove_duplicates(i);
+            }
+
+            temp
         }
         pub fn have_boom(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
