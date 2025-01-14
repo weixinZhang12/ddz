@@ -1,17 +1,17 @@
 pub mod normal {
     use crate::pai::{
         normal_version::{Pai, PaiVec},
-        pai_p::remove_duplicates,
+        pai_p::{remove_duplicates, PaiError},
     };
     use std::{cmp::Ordering, collections::HashMap, error::Error};
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     pub struct Player {
         pub pai: PaiVec,
         pub stat_pai: HashMap<char, usize>,
         pub cu_map: HashMap<char, usize>,
         pub uc_map: HashMap<usize, char>,
         pub len: usize,
-        pub is_dz:bool
+        pub is_dz: bool,
     }
     impl Player {
         pub fn new() -> Self {
@@ -29,8 +29,8 @@ pub mod normal {
             cu_map.insert('K', 13);
             cu_map.insert('A', 14);
             cu_map.insert('2', 15);
-            cu_map.insert('W', 16);
-            cu_map.insert('w', 17);
+            cu_map.insert('w', 16);
+            cu_map.insert('W', 17);
             let mut uc_map: HashMap<usize, char> = HashMap::new();
             uc_map.insert(3, '3');
             uc_map.insert(4, '4');
@@ -53,7 +53,7 @@ pub mod normal {
                 cu_map,
                 uc_map,
                 len: 0,
-                is_dz:false
+                is_dz: false,
             }
         }
         ///修改玩家手牌
@@ -78,12 +78,12 @@ pub mod normal {
             self.stat_player_pai();
             self.auto_mod_len();
         }
-        // 自动修改手牌数量
+        /// 自动修改手牌数量
         pub fn auto_mod_len(&mut self) {
             let len = self.get_length();
             self.len = len
         }
-        // 获取手牌数
+        /// 获取手牌数
         pub fn get_length(&self) -> usize {
             self.pai_to_string().len()
         }
@@ -133,28 +133,26 @@ pub mod normal {
             }
             s
         }
-
-        pub fn find_min(&self)->Option<String>{
-            let one=self.have_one();
+        /// 寻找最小的牌
+        pub fn find_min(&self) -> Option<String> {
+            let one = self.have_one();
             if let Some(v) = one.iter().min() {
                 return Some(v.clone());
             }
             None
-
         }
-
+        // 尝试压死对手，没有可以出的牌，返回None
         pub fn chooose_by_second(&self, s: &Option<String>) -> Option<String> {
             if let Some(v) = s {
-               let a=  self.cu_map.get(&v.chars().next().unwrap()).unwrap();
-               for i in self.have_one() {
-               let b=  self.cu_map.get(&i.chars().next().unwrap()).unwrap();
-                   if b>a {
-                       return Some(i);
-                   }
-               }
-            }
-            else {
-                let min=self.find_min();
+                let a = self.cu_map.get(&v.chars().next().unwrap()).unwrap();
+                for i in self.have_one() {
+                    let b = self.cu_map.get(&i.chars().next().unwrap()).unwrap();
+                    if b > a {
+                        return Some(i);
+                    }
+                }
+            } else {
+                let min = self.find_min();
                 if min.is_some() {
                     return min;
                 }
@@ -163,7 +161,7 @@ pub mod normal {
         }
 
         ///打出牌，无法打出的时候会返回一个错误
-        pub fn del(&mut self, s: String) -> Result<String, Box<dyn Error>> {
+        pub fn del(&mut self, s: String) -> Result<String, PaiError> {
             let c_arr: Vec<char> = s.chars().collect();
             // 创建副本，如果在副本尝试出牌无法打出，直接放弃，否则才会修改真正的手牌
             let mut t = self.stat_pai.clone();
@@ -184,10 +182,9 @@ pub mod normal {
                         }
                     }
                 } else {
-                    return Err(Box::new(std::io::Error::new(
-                        std::io::ErrorKind::NotFound,
-                        "玩家无法打出，缺少相应的牌",
-                    )));
+                    return Err(PaiError::NotFoundPai(
+                        "无法找到牌，因此该牌型无法打出".to_string(),
+                    ));
                 }
             }
             for i in c_arr {
@@ -277,6 +274,7 @@ pub mod normal {
             }
             temp
         }
+        /// 获取三带二
         pub fn have_three_and_double(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
 
@@ -291,6 +289,7 @@ pub mod normal {
             }
             temp
         }
+        /// 获取三带二
         pub fn have_three_and_three(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
 
@@ -311,6 +310,7 @@ pub mod normal {
             }
             temp
         }
+        /// 三带三带三
         pub fn have_ttt(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
 
@@ -339,6 +339,7 @@ pub mod normal {
             }
             temp
         }
+        /// 三带三带三带三
         pub fn have_tttt(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
 
@@ -372,7 +373,7 @@ pub mod normal {
             }
             temp
         }
-
+        /// 三带三带三带三带三
         pub fn have_ttttt(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
 
@@ -425,18 +426,19 @@ pub mod normal {
             }
             temp
         }
-
+        /// 飞机
         pub fn have_tttooo(&self) -> Vec<String> {
             let ttt: Vec<String> = self.have_ttt();
             let one: Vec<String> = self.have_one();
             let mut three_head: Vec<&str> = vec![];
             let mut temp: Vec<String> = vec![];
             for i in &ttt {
-                let t = remove_duplicates(i);
+                let t = remove_duplicates(Some(i.clone()));
             }
 
             temp
         }
+        /// 炸弹
         pub fn have_boom(&self) -> Vec<String> {
             let mut temp: Vec<String> = vec![];
             for i in &self.stat_pai {
